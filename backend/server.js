@@ -20,7 +20,7 @@ async function main() {
   const app = express();
   app.use(cors(corsOptions)); // Use the CORS options
   app.use(express.json());
-  app.use(routes);
+  app.use("/api",routes);
 
   app.listen(port, () => {
     console.log('Server is listening on port: ${port}');
