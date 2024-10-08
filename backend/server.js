@@ -5,15 +5,12 @@ const port = 3001;
 const routes = require("./routes");
 
 // CORS options
-const corsOptions = {
-  origin: 'http://localhost:3000/', // Your frontend URL
-  optionsSuccessStatus: 200, // For legacy browser support
-};
+
 
 main().catch((err) => console.log(err));
 
 async function main() {
-  await mongoose.connect("mongodb://mongo:27017/todos", {
+  await mongoose.connect("mongodb://database:27017/todos", {
     useUnifiedTopology: true,
     useNewUrlParser: true,
   });
