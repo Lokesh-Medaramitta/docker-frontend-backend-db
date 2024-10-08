@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const port = 3001;
 const routes = require("./routes");
 
-// CORS options
+
 
 
 main().catch((err) => console.log(err));
