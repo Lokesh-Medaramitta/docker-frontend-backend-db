@@ -7,7 +7,7 @@ services:
     ports:
       - "3000:3000"
     networks:
-      - network-backend
+      - new
   api:
     build: ./backend
     depends_on:
@@ -15,13 +15,13 @@ services:
     ports:
       - "3001:3001"
     networks: 
-     - network-backend
+     - new
   
   mongo:
     image: mongo
     restart: always
     volumes: 
-      - mongodb_data:/data/db
+      - v1:/data/db
     environment: 
       MONGODB_INITDB_ROOT_USERNAME: username
       MONGODB_INITDB_ROOT_PASSWORD: password
@@ -29,10 +29,10 @@ services:
     # ports:
     #   - 27017:27017
     networks: 
-     - network-backend
+     - new
 
 networks:
-  network-backend:
+  new:
 
 volumes: 
-  mongodb_data:
+  v1:
