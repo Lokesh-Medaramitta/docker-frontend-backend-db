@@ -1,5 +1,30 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                  containers:
+                  - name: docker
+                    image: docker:20-dind  # Docker-in-Docker image
+                    securityContext:
+                        privileged: true   # Granting privileged mode to run Docker commands
+                    tty: true
+                  - name: helm
+                    image: alpine/helm:3.8.2
+                    command:
+                    - cat
+                    tty: true
+                  - name: azurecli
+                    image: mcr.microsoft.com/azure-cli
+                    command:
+                    - cat
+                    tty: true
+            '''
+        }
+    }
+
     stages {
         // Clone Repository
         stage('Clone Repository') {
@@ -13,8 +38,10 @@ pipeline {
         // Create Network
         stage('Create Network') {
             steps {
-                script {
-                    docker.networkCreate('loki') || true
+                container('docker') {
+                    script {
+                        sh 'docker network create loki || true'
+                    }
                 }
             }
         }
@@ -22,8 +49,10 @@ pipeline {
         // Create Volume
         stage('Create Volume') {
             steps {
-                script {
-                    docker.volumeCreate('vol1') || true
+                container('docker') {
+                    script {
+                        sh 'docker volume create vol1 || true'
+                    }
                 }
             }
         }
@@ -36,22 +65,26 @@ pipeline {
             stages {
                 stage('Pull Mongo Image') {
                     steps {
-                        script {
-                            docker.pull('mongo')
+                        container('docker') {
+                            script {
+                                sh 'docker pull mongo'
+                            }
                         }
                     }
                 }
                 stage('Run Mongo Container') {
                     steps {
-                        script {
-                            sh '''
-                            docker run -d \
-                            --network loki \
-                            -v vol1:/data/db \
-                            -e MONGODB_INITDB_ROOT_USERNAME=username \
-                            -e MONGODB_INITDB_ROOT_PASSWORD=password \
-                            mongo
-                            '''
+                        container('docker') {
+                            script {
+                                sh '''
+                                docker run -d \
+                                --network loki \
+                                -v vol1:/data/db \
+                                -e MONGODB_INITDB_ROOT_USERNAME=username \
+                                -e MONGODB_INITDB_ROOT_PASSWORD=password \
+                                mongo
+                                '''
+                            }
                         }
                     }
                 }
@@ -74,20 +107,24 @@ pipeline {
             stages {
                 stage('Build Backend Image') {
                     steps {
-                        script {
-                            sh 'docker build -t backend-image ./backend'
+                        container('docker') {
+                            script {
+                                sh 'docker build -t backend-image ./backend'
+                            }
                         }
                     }
                 }
                 stage('Run Backend Container') {
                     steps {
-                        script {
-                            sh '''
-                            docker run -d \
-                            --network loki \
-                            -p 3001:3001 \
-                            backend-image
-                            '''
+                        container('docker') {
+                            script {
+                                sh '''
+                                docker run -d \
+                                --network loki \
+                                -p 3001:3001 \
+                                backend-image
+                                '''
+                            }
                         }
                     }
                 }
@@ -110,20 +147,24 @@ pipeline {
             stages {
                 stage('Build Frontend Image') {
                     steps {
-                        script {
-                            sh 'docker build -t frontend-image ./frontend'
+                        container('docker') {
+                            script {
+                                sh 'docker build -t frontend-image ./frontend'
+                            }
                         }
                     }
                 }
                 stage('Run Frontend Container') {
                     steps {
-                        script {
-                            sh '''
-                            docker run -d \
-                            --network loki \
-                            -p 3000:3000 \
-                            frontend-image
-                            '''
+                        container('docker') {
+                            script {
+                                sh '''
+                                docker run -d \
+                                --network loki \
+                                -p 3000:3000 \
+                                frontend-image
+                                '''
+                            }
                         }
                     }
                 }
