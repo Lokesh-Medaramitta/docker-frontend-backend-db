@@ -31,7 +31,7 @@ pipeline {
         // MongoDB Pipeline (for Database setup)
         stage('MongoDB Pipeline') {
             when {
-                branch 'main' // or specify which branches trigger MongoDB setup
+                branch 'master' // or specify which branches trigger MongoDB setup
             }
             stages {
                 stage('Pull Mongo Image') {
@@ -71,7 +71,7 @@ pipeline {
         // Backend Pipeline
         stage('Backend Pipeline') {
             when {
-                branch 'main' // or specify which branches trigger Backend setup
+                branch 'master' // or specify which branches trigger Backend setup
             }
             stages {
                 stage('Build Backend Image') {
@@ -109,7 +109,7 @@ pipeline {
         // Frontend Pipeline
         stage('Frontend Pipeline') {
             when {
-                branch 'main' // or specify which branches trigger Frontend setup
+                branch 'master' // or specify which branches trigger Frontend setup
             }
             stages {
                 stage('Build Frontend Image') {
