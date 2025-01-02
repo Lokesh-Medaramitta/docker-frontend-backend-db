@@ -1,4 +1,5 @@
 pipeline {
+    agent any
     agent {
         kubernetes {
             yaml '''
@@ -25,55 +26,52 @@ pipeline {
         }
     }
     stages {
+        // Clone Repository
+        stage('Clone Repository') {
         stage('Clone Repo') {
             steps {
                 script {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
             }
-            post {
-                success {
-                    echo 'Repository cloned successfully!'
-                }
-                failure {
-                    echo 'Repository cloning failed.'
-                }
-            }
         }
+        // Create Network
+        stage('Create Network') {
         stage('Creating Network') {
             steps {
+                script {
+                    sh 'docker network create loki || true'
                 container('docker') {
                     script {
                         sh 'docker network create loki || true'
                     }
                 }
             }
-            post {
-                success {
-                    echo 'Network created successfully!'
-                }
-                failure {
-                    echo 'Network creation failed.'
-                }
-            }
         }
+        // Create Volume
+        stage('Create Volume') {
         stage('Creating Volume') {
             steps {
+                script {
+                    sh 'docker volume create vol1 || true'
                 container('docker') {
                     script {
                         sh 'docker volume create vol1 || true'
                     }
                 }
             }
-            post {
-                success {
-                    echo 'Volume created successfully!'
-                }
-                failure {
-                    echo 'Volume creation failed.'
-                }
-            }
         }
+        // MongoDB Pipeline (for Database setup)
+        stage('MongoDB Pipeline') {
+            when {
+                branch 'master' // or specify which branches trigger MongoDB setup
+            }
+            stages {
+                stage('Pull Mongo Image') {
+                    steps {
+                        script {
+                            sh 'docker pull mongo'
+                        }
         stage('Pulling Mongo') {
             steps {
                 container('docker') {
@@ -81,14 +79,18 @@ pipeline {
                         sh 'docker pull mongo'
                     }
                 }
-            }
-            post {
-                success {
-                    echo 'Mongo image pulled successfully!'
-                }
-                failure {
-                    echo 'Failed to pull Mongo image.'
-                }
+                stage('Run Mongo Container') {
+                    steps {
+                        script {
+                            sh '''
+                            docker run -d \
+                            --network loki \
+                            -v vol1:/data/db \
+                            -e MONGODB_INITDB_ROOT_USERNAME=username \
+                            -e MONGODB_INITDB_ROOT_PASSWORD=password \
+                            mongo
+                            '''
+                        }
             }
         }
         stage('Running Mongo Container') {
@@ -113,25 +115,44 @@ pipeline {
                 failure {
                     echo 'MongoDB deployment failed.'
                 }
+        }
+        post {
+            success {
+                echo 'MongoDB container deployed successfully!'
+            }
+            failure {
+                echo 'MongoDB deployment failed.'
             }
         }
 
+        // Backend Pipeline
         stage('Backend Pipeline') {
+            when {
+                branch 'master' // or specify which branches trigger Backend setup
+            }
+            stages {
+                stage('Build Backend Image') {
+                    steps {
+                        script {
+                            sh 'docker build -t backend-image ./backend'
+                        }
+                    }
             steps {
                 script {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
-            }
-            post {
-                success {
-                    echo 'Backend repository cloned successfully!'
-                }
-                failure {
-                    echo 'Backend repository cloning failed.'
-                }
+                stage('Run Backend Container') {
+                    steps {
+                        script {
+                            sh '''
+                            docker run -d \
+                            --network loki \
+                            -p 3001:3001 \
+                            backend-image
+                            '''
+                        }
             }
         }
-
         stage('Build Backend Image') {
             steps {
                 container('docker') {
@@ -142,14 +163,11 @@ pipeline {
             }
             post {
                 success {
-                    echo 'Backend image built successfully!'
+                    echo 'Backend container deployed successfully!'
                 }
                 failure {
-                    echo 'Backend image build failed.'
-                }
-            }
+                    echo 'Backend deployment failed.'
         }
-
         stage('Run Backend Container') {
             steps {
                 container('docker') {
@@ -163,32 +181,44 @@ pipeline {
                     }
                 }
             }
-            post {
-                success {
-                    echo 'Backend container deployed successfully!'
-                }
-                failure {
-                    echo 'Backend deployment failed.'
-                }
+        }
+        post {
+            success {
+                echo 'Backend container deployed successfully!'
+            }
+            failure {
+                echo 'Backend deployment failed.'
             }
         }
 
+        // Frontend Pipeline
         stage('Frontend Pipeline') {
+            when {
+                branch 'master' // or specify which branches trigger Frontend setup
+            }
+            stages {
+                stage('Build Frontend Image') {
+                    steps {
+                        script {
+                            sh 'docker build -t frontend-image ./frontend'
+                        }
+                    }
             steps {
                 script {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
-            }
-            post {
-                success {
-                    echo 'Frontend repository cloned successfully!'
-                }
-                failure {
-                    echo 'Frontend repository cloning failed.'
-                }
+                stage('Run Frontend Container') {
+                    steps {
+                        script {
+                            sh '''
+                            docker run -d \
+                            --network loki \
+                            -p 3000:3000 \
+                            frontend-image
+                            '''
+                        }
             }
         }
-
         stage('Build Frontend Image') {
             steps {
                 container('docker') {
@@ -199,14 +229,11 @@ pipeline {
             }
             post {
                 success {
-                    echo 'Frontend image built successfully!'
+                    echo 'Frontend container deployed successfully!'
                 }
                 failure {
-                    echo 'Frontend image build failed.'
-                }
-            }
+                    echo 'Frontend deployment failed.'
         }
-
         stage('Run Frontend Container') {
             steps {
                 container('docker') {
@@ -220,13 +247,17 @@ pipeline {
                     }
                 }
             }
-            post {
-                success {
-                    echo 'Frontend container deployed successfully!'
-                }
-                failure {
-                    echo 'Frontend deployment failed.'
-                }
+        }
+    }
+    post {
+        always {
+            echo 'Pipeline execution completed.'
+        post {
+            success {
+                echo 'Frontend container deployed successfully!'
+            }
+            failure {
+                echo 'Frontend deployment failed.'
             }
         }
     }
