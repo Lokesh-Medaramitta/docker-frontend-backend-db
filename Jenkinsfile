@@ -31,6 +31,14 @@ pipeline {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
             }
+            post {
+                success {
+                    echo 'Repository cloned successfully!'
+                }
+                failure {
+                    echo 'Repository cloning failed.'
+                }
+            }
         }
         stage('Creating Network') {
             steps {
@@ -38,6 +46,14 @@ pipeline {
                     script {
                         sh 'docker network create loki || true'
                     }
+                }
+            }
+            post {
+                success {
+                    echo 'Network created successfully!'
+                }
+                failure {
+                    echo 'Network creation failed.'
                 }
             }
         }
@@ -49,6 +65,14 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    echo 'Volume created successfully!'
+                }
+                failure {
+                    echo 'Volume creation failed.'
+                }
+            }
         }
         stage('Pulling Mongo') {
             steps {
@@ -56,6 +80,14 @@ pipeline {
                     script {
                         sh 'docker pull mongo'
                     }
+                }
+            }
+            post {
+                success {
+                    echo 'Mongo image pulled successfully!'
+                }
+                failure {
+                    echo 'Failed to pull Mongo image.'
                 }
             }
         }
@@ -74,13 +106,13 @@ pipeline {
                     }
                 }
             }
-        }
-        post {
-            success {
-                echo 'MongoDB container deployed successfully!'
-            }
-            failure {
-                echo 'MongoDB deployment failed.'
+            post {
+                success {
+                    echo 'MongoDB container deployed successfully!'
+                }
+                failure {
+                    echo 'MongoDB deployment failed.'
+                }
             }
         }
 
@@ -90,7 +122,16 @@ pipeline {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
             }
+            post {
+                success {
+                    echo 'Backend repository cloned successfully!'
+                }
+                failure {
+                    echo 'Backend repository cloning failed.'
+                }
+            }
         }
+
         stage('Build Backend Image') {
             steps {
                 container('docker') {
@@ -99,7 +140,16 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    echo 'Backend image built successfully!'
+                }
+                failure {
+                    echo 'Backend image build failed.'
+                }
+            }
         }
+
         stage('Run Backend Container') {
             steps {
                 container('docker') {
@@ -113,13 +163,13 @@ pipeline {
                     }
                 }
             }
-        }
-        post {
-            success {
-                echo 'Backend container deployed successfully!'
-            }
-            failure {
-                echo 'Backend deployment failed.'
+            post {
+                success {
+                    echo 'Backend container deployed successfully!'
+                }
+                failure {
+                    echo 'Backend deployment failed.'
+                }
             }
         }
 
@@ -129,7 +179,16 @@ pipeline {
                     git url: 'https://github.com/Lokesh-Medaramitta/docker-frontend-backend-db.git'
                 }
             }
+            post {
+                success {
+                    echo 'Frontend repository cloned successfully!'
+                }
+                failure {
+                    echo 'Frontend repository cloning failed.'
+                }
+            }
         }
+
         stage('Build Frontend Image') {
             steps {
                 container('docker') {
@@ -138,7 +197,16 @@ pipeline {
                     }
                 }
             }
+            post {
+                success {
+                    echo 'Frontend image built successfully!'
+                }
+                failure {
+                    echo 'Frontend image build failed.'
+                }
+            }
         }
+
         stage('Run Frontend Container') {
             steps {
                 container('docker') {
@@ -152,13 +220,13 @@ pipeline {
                     }
                 }
             }
-        }
-        post {
-            success {
-                echo 'Frontend container deployed successfully!'
-            }
-            failure {
-                echo 'Frontend deployment failed.'
+            post {
+                success {
+                    echo 'Frontend container deployed successfully!'
+                }
+                failure {
+                    echo 'Frontend deployment failed.'
+                }
             }
         }
     }
