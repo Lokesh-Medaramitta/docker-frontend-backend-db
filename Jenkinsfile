@@ -1,6 +1,7 @@
 pipeline {
     agent {
         kubernetes {
+            namespace 'docu'  // Specify the namespace where Jenkins is running
             yaml '''
                 apiVersion: v1
                 kind: Pod
